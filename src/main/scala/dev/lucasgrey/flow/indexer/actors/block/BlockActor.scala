@@ -3,16 +3,16 @@ package dev.lucasgrey.flow.indexer.actors.block
 import akka.actor.typed.{Behavior, SupervisorStrategy}
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{EventSourcedBehavior, RetentionCriteria}
-import dev.lucasgrey.flow.indexer.actors.block.command.{BlockCommands, blockCommandHandler}
-import dev.lucasgrey.flow.indexer.actors.block.event.{BlockEvents, blockEventHandler}
+import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, blockEventHandler}
+import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.{BlockCommand, blockCommandHandler}
 import dev.lucasgrey.flow.indexer.actors.block.state.BlockState
 
 import scala.concurrent.duration.DurationInt
 
 object BlockActor {
 
-  def apply(blockHeight: Long): Behavior[BlockCommands] = {
-    EventSourcedBehavior[BlockCommands, BlockEvents, BlockState] (
+  def apply(blockHeight: Long): Behavior[BlockCommand] = {
+    EventSourcedBehavior[BlockCommand, BlockEvent, BlockState] (
       emptyState = BlockState(
         BlockHeight = 0L
       ),

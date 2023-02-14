@@ -9,7 +9,9 @@ import dev.lucasgrey.flow.indexer.config.ConfigHolder
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class BlockMonitor {
+class BlockMonitor(
+  val accessAPI: FlowAccessApi
+) {
 
   import BlockMonitor._
 
@@ -18,7 +20,7 @@ class BlockMonitor {
 
   def StartPolling(): Future[Done] = {
     Source.unfold(startHeight) { currentHeight =>
-      if (currentHeight == getLatestHeight) {
+      if (currentHeight >= getLatestHeight) {
         Thread.sleep(100)
         None
       } else {
@@ -45,7 +47,5 @@ class BlockMonitor {
 
 object BlockMonitor extends ConfigHolder {
   val startHeight: Long = config.getString("start-height").toLong
-  val accessAPI: FlowAccessApi = Flow.newAccessApi("", 0)
-
 }
 
