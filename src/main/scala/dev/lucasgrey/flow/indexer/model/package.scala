@@ -5,14 +5,20 @@ import dev.lucasgrey.flow.indexer.serializable.JsonSerializable
 import java.time.Instant
 
 package object model {
+  case class FlowBlockHeader(
+    height: Long,
+    id: FlowId,
+    parentId: FlowId
+  ) extends JsonSerializable
+
   case class FlowBlock(
     height: Long,
     id: FlowId,
     parentId: FlowId,
     timestamp: Instant,
-    collectionGuarantee: Option[List[(FlowId, List[FlowSignature])]],
-    seals: Option[List[FlowSeals]],
-    signatures: Option[List[FlowSignature]]
+    collectionGuarantee: List[(FlowId, List[FlowSignature])],
+    seals: List[FlowSeals],
+    signatures: List[FlowSignature]
   ) extends JsonSerializable
 
   case class FlowSeals(
@@ -21,7 +27,6 @@ package object model {
     executionReceiptSignatures: List[FlowSignature],
     resultApprovalSignatures: List[FlowSignature]
   ) extends JsonSerializable
-
 
   type FlowId = Seq[Byte]
   type FlowSignature = Seq[Byte]

@@ -1,54 +1,63 @@
 package dev.lucasgrey.flow.indexer.daemon
 
-import akka.{Done, NotUsed}
+import akka.Done
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
-import akka.actor.typed.scaladsl.Behaviors
+import akka.stream.{Materializer, OverflowStrategy, ThrottleMode}
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
-import com.nftco.flow.sdk.{Flow, FlowAccessApi, FlowBlockHeader}
+import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.BlockActor
-import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.{BlockCommand, RegisterBlock}
+import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.RegisterBlock
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
-import kotlin.reflect.jvm.internal.impl.resolve.scopes.MemberScope.Empty
+import dev.lucasgrey.flow.indexer.utils.FlowClient
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
 class BlockMonitor(
-  val accessAPI: FlowAccessApi
-) {
+  val flowClient: FlowClient
+)(implicit val executionContext: ExecutionContext, val materializer: Materializer, val actorSystem: ActorSystem[Nothing])
+  extends StrictLogging {
 
   import BlockMonitor._
-
-  implicit val actorSystem: ActorSystem[Empty] = ActorSystem(Behaviors.empty, "actor")
-  implicit val executionContext: ExecutionContext = actorSystem.executionContext
   implicit val timeout: Timeout = 10.seconds
 
   def StartPolling(): Future[Done] = {
-    Source.unfold(startHeight) { currentHeight =>
-      if (currentHeight >= getLatestHeight) {
-        Thread.sleep(100)
-        None
-      } else {
-        Some(currentHeight + 1, currentHeight)
-      }
-    }
-      .mapAsync(1) { height =>
+    Source.unfoldAsync[(Long, Long), Long]((startHeight, startHeight+1)) {
+      case (currHeight, limitHeight) =>
         for {
-          blockHeader <- getBlockHeader(height)
-          res = ActorSystem(BlockActor.apply(blockHeader.getHeight), "blockActor") ! RegisterBlock(blockHeader)
+          latestHeight <- if(currHeight + 1 >= limitHeight) {
+            logger.debug("Near current height, getting latest height again")
+            getLatestHeight
+          } else {
+            logger.debug("Way longer than current height, catching up!")
+            Future.successful(limitHeight)
+          }
+          res = if (currHeight >= latestHeight) {
+            logger.debug("Catches up with latest height waiting for 1s")
+            Thread.sleep(1000)
+            Some((currHeight, latestHeight), currHeight)
+          } else {
+            Some((currHeight + 1, latestHeight), currHeight)
+          }
         } yield res
+    }
+      .buffer(1000, OverflowStrategy.backpressure)
+      .throttle(50, 500.millis, 10, ThrottleMode.Shaping)
+      .mapAsync(2) { height =>
+        for {
+          blockHeader <- flowClient.getBlockHeaderByHeight(height)
+          res <- ActorSystem(BlockActor.apply(blockHeader.height), "blockActor") ? (replyTo => RegisterBlock(blockHeader, replyTo))
+        } yield res
+        logger.info(s"got Height $height")
+        Future.unit
       }
       .runWith(Sink.ignore)
   }
 
-  private def getLatestHeight: Long = {
-    accessAPI.getLatestBlockHeader.getHeight
-  }
-
-  private def getBlockHeader(blockHeight: Long): Future[FlowBlockHeader] = {
-    Future.successful(accessAPI.getBlockHeaderByHeight(blockHeight))
+  private def getLatestHeight: Future[Long] = {
+    flowClient.getLatestBlockHeader.map(_.height)
   }
 }
 

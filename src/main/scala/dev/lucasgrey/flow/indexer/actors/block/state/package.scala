@@ -1,7 +1,6 @@
 package dev.lucasgrey.flow.indexer.actors.block
 
-import com.nftco.flow.sdk.FlowBlockHeader
-import dev.lucasgrey.flow.indexer.model.FlowBlock
+import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader}
 import dev.lucasgrey.flow.indexer.serializable.JsonSerializable
 
 package object state {

@@ -10,6 +10,7 @@ import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.command.handlers.RegisterBlockCmdHandler
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.daemon.BlockMonitor
+import dev.lucasgrey.flow.indexer.utils.FlowClient
 import dev.lucasgrey.flow.indexer.utils.FlowClientCreator.buildAPIFutureStubs
 import kamon.Kamon
 import org.onflow.protobuf.access.AccessAPIGrpc
@@ -33,6 +34,7 @@ object FlowIndexerApplication extends App
     config.getString("flow.access-node.host"),
     config.getInt("flow.access-node.port")
   )
+  lazy val flowClient: FlowClient = wire[FlowClient]
 
   //Start Polling
   lazy val blockMonitor = wire[BlockMonitor]

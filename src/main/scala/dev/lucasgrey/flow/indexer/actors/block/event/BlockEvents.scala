@@ -1,9 +1,8 @@
 package dev.lucasgrey.flow.indexer.actors.block.event
 
-import com.nftco.flow.sdk.FlowBlockHeader
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.state.{BlockState, Initialized}
-import dev.lucasgrey.flow.indexer.model.FlowBlock
+import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader}
 import dev.lucasgrey.flow.indexer.serializable.JsonSerializable
 
 object BlockEvents extends StrictLogging {
