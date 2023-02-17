@@ -39,6 +39,6 @@ libraryDependencies ++= Seq(
   "com.softwaremill.macwire" %% "proxy" % "2.5.8",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
 
-//3rd Party Repo
-  "com.nftco" % "flow-jvm-sdk" % "0.7.3"
+  //3rd Party Repo
+  "org.onflow" % "flow" % "0.21"
 )

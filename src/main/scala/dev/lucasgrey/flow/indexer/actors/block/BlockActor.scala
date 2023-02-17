@@ -5,17 +5,14 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{EventSourcedBehavior, RetentionCriteria}
 import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, blockEventHandler}
 import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.{BlockCommand, blockCommandHandler}
-import dev.lucasgrey.flow.indexer.actors.block.state.BlockState
+import dev.lucasgrey.flow.indexer.actors.block.state.{BlockState, NotInitialized}
 
 import scala.concurrent.duration.DurationInt
 
 object BlockActor {
-
   def apply(blockHeight: Long): Behavior[BlockCommand] = {
     EventSourcedBehavior[BlockCommand, BlockEvent, BlockState] (
-      emptyState = BlockState(
-        BlockHeight = 0L
-      ),
+      emptyState = NotInitialized,
       eventHandler = blockEventHandler,
       commandHandler = blockCommandHandler,
       persistenceId = PersistenceId("blockHeight", blockHeight.toString)
@@ -23,5 +20,4 @@ object BlockActor {
       .withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = 100, keepNSnapshots = 3))
       .onPersistFailure(SupervisorStrategy.restartWithBackoff(200.millis, 5.seconds, 0.1))
   }
-
 }
