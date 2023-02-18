@@ -24,27 +24,28 @@ class BlockMonitor(
   implicit val timeout: Timeout = 10.seconds
 
   def StartPolling(): Future[Done] = {
-    Source.unfoldAsync[(Long, Long), Long]((startHeight, startHeight+1)) {
-      case (currHeight, limitHeight) =>
-        for {
-          latestHeight <- if(currHeight + 1 >= limitHeight) {
-            logger.debug("Near current height, getting latest height again")
-            getLatestHeight
-          } else {
-            logger.debug("Way longer than current height, catching up!")
-            Future.successful(limitHeight)
-          }
-          res = if (currHeight >= latestHeight) {
-            logger.debug("Catches up with latest height waiting for 1s")
-            Thread.sleep(1000)
-            Some((currHeight, latestHeight), currHeight)
-          } else {
-            Some((currHeight + 1, latestHeight), currHeight)
-          }
-        } yield res
-    }
-      .buffer(1000, OverflowStrategy.backpressure)
-      .throttle(50, 500.millis, 10, ThrottleMode.Shaping)
+//    Source.unfoldAsync[(Long, Long), Long]((startHeight, startHeight+1)) {
+//      case (currHeight, limitHeight) =>
+//        for {
+//          latestHeight <- if(currHeight + 1 >= limitHeight) {
+//            logger.debug("Near current height, getting latest height again")
+//            getLatestHeight
+//          } else {
+//            logger.debug("Way longer than current height, catching up!")
+//            Future.successful(limitHeight)
+//          }
+//          res = if (currHeight >= latestHeight) {
+//            logger.debug("Catches up with latest height waiting for 1s")
+//            Thread.sleep(1000)
+//            Some((currHeight, latestHeight), currHeight)
+//          } else {
+//            Some((currHeight + 1, latestHeight), currHeight)
+//          }
+//        } yield res
+//    }
+//      .buffer(1000, OverflowStrategy.backpressure)
+      Source.single(startHeight)
+      .throttle(50, 2000.millis, 10, ThrottleMode.Shaping)
       .mapAsync(2) { height =>
         for {
           blockHeader <- flowClient.getBlockHeaderByHeight(height)
