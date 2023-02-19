@@ -1,8 +1,6 @@
 package dev.lucasgrey.flow.indexer.actors.block.command
 
-import akka.Done
 import akka.actor.typed.ActorRef
-import akka.pattern.StatusReply
 import akka.persistence.typed.scaladsl.Effect
 import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.BlockEvent
 import dev.lucasgrey.flow.indexer.actors.block.state.{BlockState, Initialized}

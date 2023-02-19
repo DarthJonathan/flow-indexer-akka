@@ -28,6 +28,6 @@ package object model {
     resultApprovalSignatures: List[FlowSignature]
   ) extends JsonSerializable
 
-  type FlowId = Array[Byte]
-  type FlowSignature = Array[Byte]
+  type FlowId = String
+  type FlowSignature = String
 }

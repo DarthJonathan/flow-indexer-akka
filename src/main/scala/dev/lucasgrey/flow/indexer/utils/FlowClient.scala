@@ -12,6 +12,7 @@ class FlowClient (
 )(implicit executionContext: ExecutionContext) {
 
   import FuturesConverter._
+  import HexConverter._
 
   def getLatestBlockHeader: Future[FlowBlockHeader] = {
     accessAPI.getLatestBlockHeader(
@@ -21,8 +22,8 @@ class FlowClient (
     ).asScala.map(s => {
       FlowBlockHeader(
         s.getBlock.getHeight,
-        s.getBlock.getId.toByteArray,
-        s.getBlock.getParentId.toByteArray
+        convertToHex(s.getBlock.getId.toByteArray),
+        convertToHex(s.getBlock.getParentId.toByteArray)
       )
     })
   }
@@ -36,8 +37,8 @@ class FlowClient (
     ).asScala.map(s => {
       FlowBlockHeader(
         s.getBlock.getHeight,
-        s.getBlock.getId.toByteArray,
-        s.getBlock.getParentId.toByteArray
+        convertToHex(s.getBlock.getId.toByteArray),
+        convertToHex(s.getBlock.getParentId.toByteArray)
       )
     })
   }
@@ -57,14 +58,14 @@ class FlowClient (
         seals = s.getBlock.getBlockSealsList.asScala.map(s => {
           FlowSeals(
             id = s.getBlockId.toByteArray,
-            executionReceiptId = s.getExecutionReceiptId.toByteArray,
-            executionReceiptSignatures = s.getExecutionReceiptSignaturesList.asScala.map(_.toByteArray).toList,
-            resultApprovalSignatures = s.getResultApprovalSignaturesList.asScala.map(_.toByteArray).toList
+            executionReceiptId = convertToHex(s.getExecutionReceiptId.toByteArray),
+            executionReceiptSignatures = s.getExecutionReceiptSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList,
+            resultApprovalSignatures = s.getResultApprovalSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList
           )
         }).toList,
-        signatures = s.getBlock.getSignaturesList.asScala.map(_.toByteArray).toList,
+        signatures = s.getBlock.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList,
         collectionGuarantee = s.getBlock.getCollectionGuaranteesList.asScala.map(s => {
-          (s.getCollectionId.toByteArray, s.getSignaturesList.asScala.map(_.toByteArray).toList)
+          (convertToHex(s.getCollectionId.toByteArray), s.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList)
         }).toList
       )
     })

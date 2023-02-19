@@ -1,6 +1,5 @@
 package dev.lucasgrey.flow.indexer.actors.block.command.handlers
 
-import akka.pattern.StatusReply
 import akka.persistence.typed.scaladsl.Effect
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.RegisterBlock
