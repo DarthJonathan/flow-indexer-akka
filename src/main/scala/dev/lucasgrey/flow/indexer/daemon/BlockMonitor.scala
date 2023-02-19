@@ -2,14 +2,13 @@ package dev.lucasgrey.flow.indexer.daemon
 
 import akka.Done
 import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
-import akka.stream.{Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.{Materializer, OverflowStrategy}
 import akka.util.Timeout
 import com.typesafe.scalalogging.StrictLogging
-import dev.lucasgrey.flow.indexer.actors.block.BlockActor
-import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.{BlockExistsCmd, RegisterBlock}
+import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.RegisterBlock
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
+import dev.lucasgrey.flow.indexer.dao.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient}
 
 import scala.concurrent.duration.DurationInt
@@ -17,6 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BlockMonitor(
   val flowClient: FlowClient,
+  val blockHeightRepository: BlockHeightRepository,
   val entityRegistry: EntityRegistry
 )(implicit val executionContext: ExecutionContext,
   val materializer: Materializer,
@@ -46,21 +46,18 @@ class BlockMonitor(
           }
         } yield res
     }
-//    Source.single(startHeight)
       .buffer(1000, OverflowStrategy.backpressure)
       .mapAsync(2) { height =>
-        logger.info(s"got Height $height")
-        val entity = entityRegistry.getBlockActorByHeight(height)
-        val blockExists = entity ? (reply => BlockExistsCmd(reply))
         for {
-          isBlockExists <- blockExists
+          isBlockExists <- blockHeightRepository.findHeightExists(height).map(_.isDefined)
           _ <- if (isBlockExists) {
+            logger.info(s"got Height $height, exists, skipping!")
             Future.unit
           } else {
             for {
               blockHeader <- flowClient.getBlockHeaderByHeight(height)
               block <- flowClient.getBlockByHeight(height)
-              _ = entity ! RegisterBlock(blockHeader, block)
+              _ = entityRegistry.getBlockActorByHeight(height) ! RegisterBlock(blockHeader, block)
             } yield Future.unit
           }
         } yield Future.unit

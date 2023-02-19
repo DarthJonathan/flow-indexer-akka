@@ -5,7 +5,6 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.http.scaladsl.Http
 import akka.management.scaladsl.AkkaManagement
-import akka.http.scaladsl.server.Directives.{complete, get, path, post}
 import com.softwaremill.macwire.wire
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.BlockActor
@@ -22,6 +21,7 @@ import dev.lucasgrey.flow.indexer.utils.FlowClientCreator.buildAPIFutureStubs
 import kamon.Kamon
 import org.onflow.protobuf.access.AccessAPIGrpc
 import slick.basic.DatabaseConfig
+import akka.http.scaladsl.server.Directives._
 import slick.jdbc.PostgresProfile
 
 import scala.io.StdIn
@@ -56,8 +56,11 @@ object FlowIndexerApplication extends App
   lazy val blockMonitor = wire[BlockMonitor]
   blockMonitor.StartPolling()
 
-  //Event Processor
+  //Read side Connections
   lazy val dbConfig: DatabaseConfig[PostgresProfile] = DatabaseConfig.forConfig("akka.projection.slick", system.settings.config)
+  lazy val database = dbConfig.db
+
+  //Event Processor
   wire[BlockEventProcessor]
 
   //Projections
@@ -75,13 +78,11 @@ object FlowIndexerApplication extends App
   lazy val entityRegistry = new EntityRegistry(sharding)
 
   //Controllers
-  lazy val blockController = wire[BlockController]
+  lazy val blockController: BlockController = wire[BlockController]
 
-  val routes = get {
-    path("inspect") {
-      blockController.inspectBlockEntity
-    }
-  }
+  val routes = concat(
+    (get & path("inspect" / "block" / IntNumber)) (height => blockController.inspectBlockEntity(height))
+  )
 
   val httpPort = config.getInt("http-port")
   val bindingFut = Http()

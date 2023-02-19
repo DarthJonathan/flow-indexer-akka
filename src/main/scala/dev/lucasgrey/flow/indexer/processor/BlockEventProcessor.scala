@@ -12,7 +12,6 @@ import dev.lucasgrey.flow.indexer.actors.block.BlockActor
 import slick.basic.DatabaseConfig
 import slick.jdbc.PostgresProfile
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
 class BlockEventProcessor (
