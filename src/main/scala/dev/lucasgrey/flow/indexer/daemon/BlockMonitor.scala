@@ -8,7 +8,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.RegisterBlock
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
-import dev.lucasgrey.flow.indexer.dao.BlockHeightRepository
+import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient}
 
 import scala.concurrent.duration.DurationInt

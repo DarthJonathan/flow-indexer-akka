@@ -1,4 +1,4 @@
-package dev.lucasgrey.flow.indexer.dao
+package dev.lucasgrey.flow.indexer.dao.height
 
 import slick.jdbc.PostgresProfile.profile.api._
 import slick.lifted.Tag

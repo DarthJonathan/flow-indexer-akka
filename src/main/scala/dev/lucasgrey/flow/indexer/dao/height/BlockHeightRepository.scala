@@ -1,8 +1,7 @@
-package dev.lucasgrey.flow.indexer.dao
+package dev.lucasgrey.flow.indexer.dao.height
 
 import akka.Done
 import slick.basic.DatabaseConfig
-import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.PostgresProfile
 
 import scala.concurrent.{ExecutionContext, Future}

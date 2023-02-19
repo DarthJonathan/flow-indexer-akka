@@ -12,7 +12,6 @@ import dev.lucasgrey.flow.indexer.actors.block.BlockActor.EntityKey
 import dev.lucasgrey.flow.indexer.actors.block.command.handlers.RegisterBlockCmdHandler
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.daemon.BlockMonitor
-import dev.lucasgrey.flow.indexer.dao.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.impl.BlockController
 import dev.lucasgrey.flow.indexer.processor.BlockEventProcessor
 import dev.lucasgrey.flow.indexer.processor.handler.BlockEventReadSideHandler
@@ -22,6 +21,7 @@ import kamon.Kamon
 import org.onflow.protobuf.access.AccessAPIGrpc
 import slick.basic.DatabaseConfig
 import akka.http.scaladsl.server.Directives._
+import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
 import slick.jdbc.PostgresProfile
 
 import scala.io.StdIn

@@ -5,7 +5,7 @@ import akka.projection.eventsourced.EventEnvelope
 import akka.projection.slick.SlickHandler
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, NewBlockRegistered}
-import dev.lucasgrey.flow.indexer.dao.{BlockHeightData, BlockHeightRepository}
+import dev.lucasgrey.flow.indexer.dao.height.{BlockHeightData, BlockHeightRepository}
 import slick.dbio.DBIO
 
 import java.time.Instant

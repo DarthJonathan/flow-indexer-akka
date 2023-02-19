@@ -1,5 +1,4 @@
-package dev.lucasgrey.flow.indexer.dao
-
+package dev.lucasgrey.flow.indexer.dao.height
 
 import java.time.Instant
 
