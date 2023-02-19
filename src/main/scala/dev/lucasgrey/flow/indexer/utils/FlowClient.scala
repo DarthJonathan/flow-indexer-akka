@@ -58,13 +58,13 @@ class FlowClient (
           FlowSeals(
             id = s.getBlockId.toByteArray,
             executionReceiptId = s.getExecutionReceiptId.toByteArray,
-            executionReceiptSignatures = s.getExecutionReceiptSignaturesList.asScala.map(_.toByteArray.toSeq).toList,
-            resultApprovalSignatures = s.getResultApprovalSignaturesList.asScala.map(_.toByteArray.toSeq).toList
+            executionReceiptSignatures = s.getExecutionReceiptSignaturesList.asScala.map(_.toByteArray).toList,
+            resultApprovalSignatures = s.getResultApprovalSignaturesList.asScala.map(_.toByteArray).toList
           )
         }).toList,
-        signatures = s.getBlock.getSignaturesList.asScala.map(_.toByteArray.toSeq).toList,
+        signatures = s.getBlock.getSignaturesList.asScala.map(_.toByteArray).toList,
         collectionGuarantee = s.getBlock.getCollectionGuaranteesList.asScala.map(s => {
-          (s.getCollectionId.toByteArray.toSeq, s.getSignaturesList.asScala.map(_.toByteArray.toSeq).toList)
+          (s.getCollectionId.toByteArray, s.getSignaturesList.asScala.map(_.toByteArray).toList)
         }).toList
       )
     })

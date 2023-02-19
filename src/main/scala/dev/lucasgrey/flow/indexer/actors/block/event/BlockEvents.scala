@@ -14,7 +14,7 @@ object BlockEvents extends StrictLogging {
 
   val blockEventHandler: BlockEventHandler = (state, event) => {
     event match {
-      case x:NewBlockRegistered =>
+      case x: NewBlockRegistered =>
         logger.info(s"Registered new block height ${x.height}")
         Initialized(
           flowBlockHeader = x.blockHeader,

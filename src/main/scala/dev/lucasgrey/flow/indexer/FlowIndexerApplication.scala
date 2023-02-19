@@ -2,18 +2,27 @@ package dev.lucasgrey.flow.indexer
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.server.Directives.{complete, get, path}
+import akka.management.scaladsl.AkkaManagement
+import akka.http.scaladsl.server.Directives.{complete, get, path, post}
 import com.softwaremill.macwire.wire
 import com.typesafe.scalalogging.StrictLogging
+import dev.lucasgrey.flow.indexer.actors.block.BlockActor
+import dev.lucasgrey.flow.indexer.actors.block.BlockActor.EntityKey
 import dev.lucasgrey.flow.indexer.actors.block.command.handlers.RegisterBlockCmdHandler
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.daemon.BlockMonitor
-import dev.lucasgrey.flow.indexer.utils.FlowClient
+import dev.lucasgrey.flow.indexer.dao.BlockHeightRepository
+import dev.lucasgrey.flow.indexer.impl.BlockController
+import dev.lucasgrey.flow.indexer.processor.BlockEventProcessor
+import dev.lucasgrey.flow.indexer.processor.handler.BlockEventReadSideHandler
+import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient}
 import dev.lucasgrey.flow.indexer.utils.FlowClientCreator.buildAPIFutureStubs
 import kamon.Kamon
 import org.onflow.protobuf.access.AccessAPIGrpc
+import slick.basic.DatabaseConfig
+import slick.jdbc.PostgresProfile
 
 import scala.io.StdIn
 
@@ -21,10 +30,17 @@ object FlowIndexerApplication extends App
   with ConfigHolder
   with StrictLogging {
 
-  Kamon.init()
-
   implicit val system = ActorSystem(Behaviors.empty, "flow-indexer")
   implicit val executionContext = system.executionContext
+
+  Kamon.init()
+  AkkaManagement(system).start()
+
+  //Repository
+  lazy val blockHeightRepository = wire[BlockHeightRepository]
+
+  //Migrations
+  blockHeightRepository.createTable()
 
   //Command Handler
   lazy val registerBlockCmdHandler: RegisterBlockCmdHandler = wire[RegisterBlockCmdHandler]
@@ -40,12 +56,32 @@ object FlowIndexerApplication extends App
   lazy val blockMonitor = wire[BlockMonitor]
   blockMonitor.StartPolling()
 
-  val routes =
-    path("test") {
-      get {
-        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<H1>Hello Test</H1>"))
-      }
+  //Event Processor
+  lazy val dbConfig: DatabaseConfig[PostgresProfile] = DatabaseConfig.forConfig("akka.projection.slick", system.settings.config)
+  wire[BlockEventProcessor]
+
+  //Projections
+  lazy val blockEventReadSideHandler = wire[BlockEventReadSideHandler]
+
+  //Registry
+  lazy val sharding = ClusterSharding(system)
+
+  sharding.init(Entity(EntityKey) { entityContext =>
+    val i = math.abs(entityContext.entityId.hashCode % BlockActor.tags.size)
+    val selectedTag = BlockActor.tags(i)
+    BlockActor(entityContext.entityId, selectedTag)
+  })
+
+  lazy val entityRegistry = new EntityRegistry(sharding)
+
+  //Controllers
+  lazy val blockController = wire[BlockController]
+
+  val routes = get {
+    path("inspect") {
+      blockController.inspectBlockEntity
     }
+  }
 
   val httpPort = config.getInt("http-port")
   val bindingFut = Http()

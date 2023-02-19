@@ -12,13 +12,21 @@ resolvers +=
 
 val AkkaVersion = "2.7.0"
 val AkkaHttpVersion = "10.4.0"
+lazy val akkaManagementVersion =  "1.2.0"
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-persistence-cassandra" % "1.1.0",
+  "com.lightbend.akka" %% "akka-projection-slick" % "1.3.1",
+  "com.lightbend.akka" %% "akka-projection-eventsourced" % "1.3.1",
+  "com.typesafe.slick" %% "slick-hikaricp" % "3.4.1",
+  "org.postgresql" % "postgresql" % "42.5.4",
   "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
   "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
   "com.typesafe.akka" %% "akka-persistence-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-serialization-jackson" % AkkaVersion,
+  "com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion,
+  "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion,
   "ch.qos.logback" % "logback-classic" % "1.4.5",
   "com.typesafe.akka" %% "akka-persistence-testkit" % AkkaVersion % Test,
   "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test,
@@ -26,6 +34,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-persistence" % AkkaVersion,
   "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
   "com.typesafe.akka" %% "akka-cluster-tools" % AkkaVersion,
+  "com.typesafe.akka" %% "akka-cluster-sharding-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
   "io.kamon" %% "kamon-jaeger" % "2.6.0",
   "io.kamon" %% "kamon-bundle" % "2.6.0",
@@ -40,5 +49,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
 
   //3rd Party Repo
-  "org.onflow" % "flow" % "0.21"
+  "org.onflow" % "flow" % "0.21",
+  "com.swissborg" %% "lithium" % "0.11.2",
 )
