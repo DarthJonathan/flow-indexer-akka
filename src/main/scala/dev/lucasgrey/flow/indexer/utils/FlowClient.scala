@@ -1,9 +1,10 @@
 package dev.lucasgrey.flow.indexer.utils
 
-import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader, FlowSeals}
+import com.google.protobuf.ByteString
+import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader, FlowSeals, FlowTransaction}
 import org.onflow.protobuf.access.{Access, AccessAPIGrpc}
-import scala.jdk.CollectionConverters._
 
+import scala.jdk.CollectionConverters._
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -70,4 +71,16 @@ class FlowClient (
       )
     })
   }
+
+  def getTransactionByIds(transactionId: String): Future[FlowTransaction] = {
+    accessAPI.getTransaction(
+      Access.GetTransactionRequest
+        .newBuilder()
+        .setId(ByteString.copyFrom(HexConverter.convertToByteArray(collectionId)))
+        .build()
+    ).asScala.map(res => {
+      res.getCollection.
+    })
+  }
+
 }

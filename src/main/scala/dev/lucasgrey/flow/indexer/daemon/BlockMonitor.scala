@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.RegisterBlock
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
+import dev.lucasgrey.flow.indexer.model.FlowId
 import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient}
 
 import scala.concurrent.duration.DurationInt
@@ -46,8 +47,8 @@ class BlockMonitor(
           }
         } yield res
     }
-      .buffer(1000, OverflowStrategy.backpressure)
-      .mapAsync(2) { height =>
+      .buffer(100, OverflowStrategy.backpressure)
+      .mapAsync(100) { height =>
         for {
           isBlockExists <- blockHeightRepository.findHeightExists(height).map(_.isDefined)
           _ <- if (isBlockExists) {
@@ -64,6 +65,12 @@ class BlockMonitor(
 
       }
       .runWith(Sink.ignore)
+  }
+
+  private def extractCollections(collectionIds: List[FlowId]) = {
+    for {
+
+    }
   }
 
   private def getLatestHeight: Future[Long] = {

@@ -16,7 +16,7 @@ package object model {
     id: FlowId,
     parentId: FlowId,
     timestamp: Instant,
-    collectionGuarantee: List[(FlowId, List[FlowSignature])],
+    collectionGuarantee: List[FlowCollection],
     seals: List[FlowSeals],
     signatures: List[FlowSignature]
   ) extends JsonSerializable
@@ -28,6 +28,28 @@ package object model {
     resultApprovalSignatures: List[FlowSignature]
   ) extends JsonSerializable
 
+  case class FlowCollection(
+    collectionId: FlowId,
+    transactionList: List[FlowId]
+  ) extends JsonSerializable
+
+  case class FlowTransaction (
+    //HeavyData
+    script: String,
+    arguments: List[String],
+    referenceBlockId: FlowId,
+    payer: FlowAccount,
+    gasLimit: Long,
+    authorizers: List[FlowAccount],
+    payloadSignatures: List[],
+    envelopeSignatures: List[]
+  )
+
+  case class ProposalKey(
+    address: List[]
+  )
+
   type FlowId = String
   type FlowSignature = String
+  type FlowAccount = String
 }

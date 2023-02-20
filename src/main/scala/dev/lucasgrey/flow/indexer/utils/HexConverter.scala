@@ -12,4 +12,8 @@ object HexConverter {
     sb.toString
   }
 
+  implicit def convertToByteArray(data: String): Array[Byte] = {
+    data.sliding(2,2).toArray.map(Integer.parseInt(_, 16).toByte)
+  }
+
 }

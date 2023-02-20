@@ -3,6 +3,8 @@ package dev.lucasgrey.flow.indexer.dao.block
 case class BlockInfoData (
   height: Long,
   blockId: String,
+  parentBlockId: String,
   isSealed: Boolean,
-  collections: List[String]
+  collectionsIds: List[String],
+  transactionsIds: List[String]
 )
