@@ -34,19 +34,27 @@ package object model {
   ) extends JsonSerializable
 
   case class FlowTransaction (
-    //HeavyData
     script: String,
     arguments: List[String],
     referenceBlockId: FlowId,
     payer: FlowAccount,
     gasLimit: Long,
+    proposalKey: ProposalKey,
     authorizers: List[FlowAccount],
-    payloadSignatures: List[],
-    envelopeSignatures: List[]
+    payloadSignatures: List[FlowSingleSignature],
+    envelopeSignatures: List[FlowSingleSignature]
   )
 
   case class ProposalKey(
-    address: List[]
+    signature: FlowSignature,
+    keyId: Long,
+    sequenceNo: Long
+  )
+
+  case class FlowSingleSignature(
+    signature: FlowSignature,
+    keyId: Long,
+    address: FlowAccount
   )
 
   type FlowId = String

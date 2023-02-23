@@ -68,9 +68,10 @@ class BlockMonitor(
   }
 
   private def extractCollections(collectionIds: List[FlowId]) = {
-    for {
+    Source(collectionIds)
+      .mapAsync(4) { collectionId => {
 
-    }
+      }}
   }
 
   private def getLatestHeight: Future[Long] = {
