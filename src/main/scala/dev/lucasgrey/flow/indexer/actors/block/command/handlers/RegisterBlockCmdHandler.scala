@@ -16,6 +16,7 @@ class RegisterBlockCmdHandler extends StrictLogging {
       Effect.persist(NewBlockRegistered(
         height = cmd.blockHeader.height,
         blockHeader = cmd.blockHeader,
+        transactionList = cmd.transactionList,
         block = cmd.block
       ))
     }

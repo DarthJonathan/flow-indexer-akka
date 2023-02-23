@@ -1,6 +1,7 @@
 package dev.lucasgrey.flow.indexer
 
 import dev.lucasgrey.flow.indexer.serializable.JsonSerializable
+import io.circe.Json
 
 import java.time.Instant
 
@@ -42,11 +43,26 @@ package object model {
     proposalKey: ProposalKey,
     authorizers: List[FlowAccount],
     payloadSignatures: List[FlowSingleSignature],
-    envelopeSignatures: List[FlowSingleSignature]
-  )
+    envelopeSignatures: List[FlowSingleSignature],
+    transactionResult: Option[TransactionResult] = None
+  ) extends JsonSerializable
+
+  case class TransactionResult (
+    status: String,
+    block: FlowId,
+    events: List[FlowEvents]
+  ) extends JsonSerializable
+
+  case class FlowEvents (
+    eventType: String,
+    transactionId: FlowId,
+    transactionIndex: Int,
+    eventIndex: Int,
+    payload: String
+  ) extends JsonSerializable
 
   case class ProposalKey(
-    signature: FlowSignature,
+    address: FlowSignature,
     keyId: Long,
     sequenceNo: Long
   )

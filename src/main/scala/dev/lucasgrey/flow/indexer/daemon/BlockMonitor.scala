@@ -58,7 +58,8 @@ class BlockMonitor(
             for {
               blockHeader <- flowClient.getBlockHeaderByHeight(height)
               block <- flowClient.getBlockByHeight(height)
-              _ = entityRegistry.getBlockActorByHeight(height) ! RegisterBlock(blockHeader, block)
+              transactions <- extractTransactions(block.collectionGuarantee.flatMap(_.transactionList))
+              _ = entityRegistry.getBlockActorByHeight(height) ! RegisterBlock(blockHeader, block, transactions)
             } yield Future.unit
           }
         } yield Future.unit
@@ -67,11 +68,16 @@ class BlockMonitor(
       .runWith(Sink.ignore)
   }
 
-  private def extractCollections(collectionIds: List[FlowId]) = {
-    Source(collectionIds)
-      .mapAsync(4) { collectionId => {
-
+  private def extractTransactions(transactionIds: List[FlowId]) = {
+    Source(transactionIds)
+      .mapAsync(4) { transactionId => {
+        for {
+          transaction <- flowClient.getTransactionById(transactionId)
+          transactionResult <- flowClient.getTransactionResultById(transactionId)
+          res = transaction.copy(transactionResult = Some(transactionResult))
+        } yield res
       }}
+      .runWith(Sink.seq)
   }
 
   private def getLatestHeight: Future[Long] = {

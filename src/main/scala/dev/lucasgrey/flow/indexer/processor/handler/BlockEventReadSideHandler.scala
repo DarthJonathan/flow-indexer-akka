@@ -15,7 +15,7 @@ class BlockEventReadSideHandler(
 ) extends SlickHandler[EventEnvelope[BlockEvent]] with StrictLogging {
   override def process(envelopes: EventEnvelope[BlockEvent]): DBIO[Done] = {
     envelopes.event match {
-      case NewBlockRegistered(height, _, _) =>
+      case NewBlockRegistered(height, _, _, _) =>
         logger.info(s"Read side processor received height to be stored $height")
         blockHeightRepository.upsert(
           BlockHeightData(
