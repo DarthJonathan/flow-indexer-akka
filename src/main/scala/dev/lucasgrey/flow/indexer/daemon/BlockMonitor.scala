@@ -59,7 +59,7 @@ class BlockMonitor(
               blockHeader <- flowClient.getBlockHeaderByHeight(height)
               block <- flowClient.getBlockByHeight(height)
               transactions <- extractTransactions(block.collectionGuarantee.flatMap(_.transactionList))
-              _ = entityRegistry.getBlockActorByHeight(height) ! RegisterBlock(blockHeader, block, transactions)
+              _ = entityRegistry.getBlockActorByHeight(height) ! RegisterBlock(blockHeader, block, transactions.toList)
             } yield Future.unit
           }
         } yield Future.unit

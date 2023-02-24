@@ -1,7 +1,7 @@
 package dev.lucasgrey.flow.indexer.utils
 
 import com.google.protobuf.ByteString
-import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader, FlowEvents, FlowSeals, FlowTransaction, ProposalKey, TransactionResult}
+import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader, FlowCollection, FlowEvents, FlowSeals, FlowSingleSignature, FlowTransaction, ProposalKey, TransactionResult}
 import org.onflow.protobuf.access.{Access, AccessAPIGrpc}
 
 import scala.jdk.CollectionConverters._
@@ -65,9 +65,12 @@ class FlowClient (
           )
         }).toList,
         signatures = s.getBlock.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList,
-        collectionGuarantee = s.getBlock.getCollectionGuaranteesList.asScala.map(s => {
-          (convertToHex(s.getCollectionId.toByteArray), s.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList)
-        }).toList
+        collectionGuarantee = s.getBlock.getCollectionGuaranteesList.asScala
+          .map(s => FlowCollection(
+            collectionId = convertToHex(s.getCollectionId.toByteArray),
+            transactionList = s.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList
+          ))
+          .toList
       )
     })
   }
@@ -113,9 +116,19 @@ class FlowClient (
           proposalKey = ProposalKey(
             address = convertToHex(trx.getProposalKey.getAddress.toByteArray), keyId = trx.getProposalKey.getKeyId, sequenceNo = trx.getProposalKey.getSequenceNumber
           ),
-          authorizers = trx.getAuthorizersList.asScala.map(s => convertToHex(s.toByteArray)),
-          payloadSignatures = trx.getPayloadSignaturesList.asScala.map(s => convertToHex(s.toByteArray)),
-          envelopeSignatures = trx.getEnvelopeSignaturesList.asScala.map(s => convertToHex(s.toByteArray))
+          authorizers = trx.getAuthorizersList.asScala.map(s => convertToHex(s.toByteArray)).toList,
+          payloadSignatures = trx.getPayloadSignaturesList.asScala
+            .map(s => FlowSingleSignature(
+              signature = convertToHex(s.getSignature.toByteArray),
+              keyId = s.getKeyId,
+              address = convertToHex(s.getAddress.toByteArray)
+            )).toList,
+          envelopeSignatures = trx.getEnvelopeSignaturesList.asScala
+            .map(s => FlowSingleSignature(
+              signature = convertToHex(s.getSignature.toByteArray),
+              keyId = s.getKeyId,
+              address = convertToHex(s.getAddress.toByteArray)
+            )).toList
         )
     })
   }

@@ -36,7 +36,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-cluster-tools" % AkkaVersion,
   "com.typesafe.akka" %% "akka-cluster-sharding-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
-  "io.kamon" %% "kamon-jaeger" % "2.6.0",
+  "io.kamon" %% "kamon-zipkin" % "2.6.0",
   "io.kamon" %% "kamon-bundle" % "2.6.0",
   "io.kamon" %% "kamon-prometheus" % "2.6.0",
   "io.circe" %% "circe-core" % "0.14.4",
