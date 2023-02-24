@@ -1,7 +1,7 @@
 package dev.lucasgrey.flow.indexer.utils
 
 import com.google.protobuf.ByteString
-import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader, FlowCollection, FlowEvents, FlowSeals, FlowSingleSignature, FlowTransaction, ProposalKey, TransactionResult}
+import dev.lucasgrey.flow.indexer.model.{FlowBlock, FlowBlockHeader, FlowCollection, FlowCollectionGuarantee, FlowEvents, FlowId, FlowSeals, FlowSingleSignature, FlowTransaction, ProposalKey, TransactionResult}
 import org.onflow.protobuf.access.{Access, AccessAPIGrpc}
 
 import scala.jdk.CollectionConverters._
@@ -66,9 +66,9 @@ class FlowClient (
         }).toList,
         signatures = s.getBlock.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList,
         collectionGuarantee = s.getBlock.getCollectionGuaranteesList.asScala
-          .map(s => FlowCollection(
+          .map(s => FlowCollectionGuarantee(
             collectionId = convertToHex(s.getCollectionId.toByteArray),
-            transactionList = s.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList
+            signatureList = s.getSignaturesList.asScala.map(d => convertToHex(d.toByteArray)).toList
           ))
           .toList
       )
@@ -97,8 +97,23 @@ class FlowClient (
       })
   }
 
+  def getTransactionList(collectionId: String): Future[FlowCollection] = {
+    accessAPI.getCollectionByID(
+      Access.GetCollectionByIDRequest
+        .newBuilder()
+        .setId(ByteString.copyFrom(convertToByteArray(collectionId)))
+        .build()
+    ).asScala
+      .map(collection => {
+        FlowCollection(
+          collectionId = convertToHex(collection.getCollection.getId.toByteArray),
+          transactionList = collection.getCollection.getTransactionIdsList.asScala
+            .map(s => convertToHex(s.toByteArray)).toList
+        )
+      })
+  }
 
-    def getTransactionById(transactionId: String): Future[FlowTransaction] = {
+  def getTransactionById(transactionId: FlowId): Future[FlowTransaction] = {
     accessAPI.getTransaction(
       Access.GetTransactionRequest
         .newBuilder()

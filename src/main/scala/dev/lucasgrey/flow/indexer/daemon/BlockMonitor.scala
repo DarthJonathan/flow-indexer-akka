@@ -11,6 +11,7 @@ import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.model.FlowId
 import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient}
+import kamon.Kamon
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,6 +50,7 @@ class BlockMonitor(
     }
       .buffer(100, OverflowStrategy.backpressure)
       .mapAsync(100) { height =>
+        val span = Kamon.spanBuilder("process-height").start()
         for {
           isBlockExists <- blockHeightRepository.findHeightExists(height).map(_.isDefined)
           _ <- if (isBlockExists) {
@@ -58,14 +60,22 @@ class BlockMonitor(
             for {
               blockHeader <- flowClient.getBlockHeaderByHeight(height)
               block <- flowClient.getBlockByHeight(height)
-              transactions <- extractTransactions(block.collectionGuarantee.flatMap(_.transactionList))
-              _ = entityRegistry.getBlockActorByHeight(height) ! RegisterBlock(blockHeader, block, transactions.toList)
+              collectionList <- extractCollections(block.collectionGuarantee.map(_.collectionId))
+              transactionList <- extractTransactions(collectionList.flatMap(_.transactionList).toList)
+              _ = entityRegistry.getBlockActorByHeight(height) ! RegisterBlock(blockHeader, block, transactionList.toList)
             } yield Future.unit
           }
+          _ = span.finish()
         } yield Future.unit
 
       }
       .runWith(Sink.ignore)
+  }
+
+  private def extractCollections(collectionIdList: List[FlowId]) = {
+    Source(collectionIdList)
+      .mapAsync(4) { collectionId => flowClient.getTransactionList(collectionId) }
+      .runWith(Sink.seq)
   }
 
   private def extractTransactions(transactionIds: List[FlowId]) = {

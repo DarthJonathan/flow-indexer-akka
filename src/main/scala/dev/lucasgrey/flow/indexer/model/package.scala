@@ -17,7 +17,7 @@ package object model {
     id: FlowId,
     parentId: FlowId,
     timestamp: Instant,
-    collectionGuarantee: List[FlowCollection],
+    collectionGuarantee: List[FlowCollectionGuarantee],
     seals: List[FlowSeals],
     signatures: List[FlowSignature]
   ) extends JsonSerializable
@@ -32,6 +32,11 @@ package object model {
   case class FlowCollection(
     collectionId: FlowId,
     transactionList: List[FlowId]
+  ) extends JsonSerializable
+
+  case class FlowCollectionGuarantee(
+    collectionId: FlowId,
+    signatureList: List[FlowId]
   ) extends JsonSerializable
 
   case class FlowTransaction (
