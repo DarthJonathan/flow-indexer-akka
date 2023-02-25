@@ -13,7 +13,7 @@ class EntityRegistry(val sharding: ClusterSharding) (
   val actorSystem: ActorSystem[_]
 ) {
 
-  def getBlockActorByHeight(height: Long) = {
-    sharding.entityRefFor(BlockActor.EntityKey, height.toString)
+  def getBlockActorByHeight(height: String) = {
+    sharding.entityRefFor(BlockActor.EntityKey, height)
   }
 }

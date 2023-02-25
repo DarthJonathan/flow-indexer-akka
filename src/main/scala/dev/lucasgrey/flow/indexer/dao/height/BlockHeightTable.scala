@@ -1,6 +1,6 @@
 package dev.lucasgrey.flow.indexer.dao.height
 
-import slick.jdbc.PostgresProfile.profile.api._
+import dev.lucasgrey.flow.indexer.utils.PostgresProfileExtended.api._
 import slick.lifted.Tag
 
 import java.time.Instant

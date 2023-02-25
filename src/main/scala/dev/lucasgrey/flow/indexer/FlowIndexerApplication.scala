@@ -12,17 +12,17 @@ import dev.lucasgrey.flow.indexer.actors.block.BlockActor.EntityKey
 import dev.lucasgrey.flow.indexer.actors.block.command.handlers.RegisterBlockCmdHandler
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.daemon.BlockMonitor
-import dev.lucasgrey.flow.indexer.impl.BlockController
-import dev.lucasgrey.flow.indexer.processor.BlockEventProcessor
-import dev.lucasgrey.flow.indexer.processor.handler.BlockEventReadSideHandler
-import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient}
+import dev.lucasgrey.flow.indexer.impl.{BlockController, InspectEntityController}
+import dev.lucasgrey.flow.indexer.processor.{BlockEventProcessor, TransactionBlockEventProcessor}
+import dev.lucasgrey.flow.indexer.processor.handler.{BlockEventReadSideHandler, TransactionEventReadSideHandler}
+import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient, PostgresProfileExtended}
 import dev.lucasgrey.flow.indexer.utils.FlowClientCreator.buildAPIFutureStubs
 import kamon.Kamon
 import org.onflow.protobuf.access.AccessAPIGrpc
 import slick.basic.DatabaseConfig
 import akka.http.scaladsl.server.Directives._
 import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
-import slick.jdbc.PostgresProfile
+import dev.lucasgrey.flow.indexer.dao.transaction.TransactionDataRepository
 
 import scala.io.StdIn
 
@@ -38,9 +38,11 @@ object FlowIndexerApplication extends App
 
   //Repository
   lazy val blockHeightRepository = wire[BlockHeightRepository]
+  lazy val transactionRepository = wire[TransactionDataRepository]
 
   //Migrations
   blockHeightRepository.createTable()
+  transactionRepository.createTable()
 
   //Command Handler
   lazy val registerBlockCmdHandler: RegisterBlockCmdHandler = wire[RegisterBlockCmdHandler]
@@ -57,14 +59,19 @@ object FlowIndexerApplication extends App
   blockMonitor.StartPolling()
 
   //Read side Connections
-  lazy val dbConfig: DatabaseConfig[PostgresProfile] = DatabaseConfig.forConfig("akka.projection.slick", system.settings.config)
+  lazy val dbConfig = DatabaseConfig.forConfig[PostgresProfileExtended] (
+    "akka.projection.slick",
+    system.settings.config
+  )
   lazy val database = dbConfig.db
 
   //Event Processor
   wire[BlockEventProcessor]
+  wire[TransactionBlockEventProcessor]
 
   //Projections
   lazy val blockEventReadSideHandler = wire[BlockEventReadSideHandler]
+  lazy val transactionReadSideHandler = wire[TransactionEventReadSideHandler]
 
   //Registry
   lazy val sharding = ClusterSharding(system)
@@ -78,10 +85,12 @@ object FlowIndexerApplication extends App
   lazy val entityRegistry = new EntityRegistry(sharding)
 
   //Controllers
+  lazy val inspectEntityController: InspectEntityController = wire[InspectEntityController]
   lazy val blockController: BlockController = wire[BlockController]
 
   val routes = concat(
-    (get & path("inspect" / "block" / IntNumber)) (height => blockController.inspectBlockEntity(height))
+    (get & path("inspect" / Segment / Segment)) { case (entityName, entityId) => inspectEntityController.inspectEntity(entityName, entityId) },
+    (get & path("transaction" / Segment)) { transactionId => blockController.getTransactionById(transactionId) }
   )
 
   val httpPort = config.getInt("http-port")

@@ -123,6 +123,7 @@ class FlowClient (
       .map(trxRes => {
         val trx = trxRes.getTransaction
         FlowTransaction(
+          transactionId = transactionId,
           script = new String(trx.getScript.toByteArray),
           arguments = trx.getArgumentsList.asScala.map(s => new String(s.toByteArray)).toList,
           referenceBlockId = convertToHex(trx.getReferenceBlockId.toByteArray),

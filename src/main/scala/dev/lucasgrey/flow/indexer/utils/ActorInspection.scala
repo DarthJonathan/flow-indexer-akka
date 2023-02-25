@@ -3,10 +3,13 @@ package dev.lucasgrey.flow.indexer.utils
 import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
 import akka.persistence.typed.scaladsl.Effect
+import akka.stream.alpakka.cassandra.scaladsl.CassandraSession
 import dev.lucasgrey.flow.indexer.serializable.JsonSerializable
 import io.circe.Encoder
 import io.circe.syntax._
 import io.circe.generic.auto._
+
+import java.time.ZonedDateTime
 
 object ActorInspection {
 
@@ -31,4 +34,10 @@ object ActorInspection {
 
     blockCommandHandler
   }
+
+  case class EventDao(
+    payload: String,
+    timestamp: ZonedDateTime,
+    serializationManifest: String
+  )
 }

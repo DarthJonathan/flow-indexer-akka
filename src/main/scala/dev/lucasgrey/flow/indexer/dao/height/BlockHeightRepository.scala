@@ -1,13 +1,13 @@
 package dev.lucasgrey.flow.indexer.dao.height
 
 import akka.Done
+import dev.lucasgrey.flow.indexer.utils.PostgresProfileExtended
 import slick.basic.DatabaseConfig
-import slick.jdbc.PostgresProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class BlockHeightRepository (
-  val dbConfig: DatabaseConfig[PostgresProfile],
+  val dbConfig: DatabaseConfig[PostgresProfileExtended],
 )(implicit val executionContext: ExecutionContext) {
 
   import dbConfig.profile.api._

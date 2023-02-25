@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   "com.lightbend.akka" %% "akka-projection-eventsourced" % "1.3.1",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.4.1",
   "org.postgresql" % "postgresql" % "42.5.4",
+  "com.typesafe.slick" %% "slick" % "3.4.1",
   "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
   "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
@@ -51,4 +52,7 @@ libraryDependencies ++= Seq(
   //3rd Party Repo
   "org.onflow" % "flow" % "0.21",
   "com.swissborg" %% "lithium" % "0.11.2",
+  "com.github.tminglei" %% "slick-pg" % "0.21.1",
+  "com.github.tminglei" %% "slick-pg_circe-json" % "0.21.1",
+  "joda-time" % "joda-time" % "2.12.1"
 )
