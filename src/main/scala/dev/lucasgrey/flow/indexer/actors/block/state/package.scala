@@ -14,12 +14,11 @@ package object state {
 
   case class Initialized(
     flowBlock: Option[FlowBlock],
-    transactionList: List[FlowTransaction],
-    isSealed: Boolean
+    transactionList: List[FlowTransaction]
   ) extends BlockState
 
   implicit val stateEncoder: Encoder[BlockState] = Encoder.instance {
     case NotInitialized => "Not Initialized".asJson
-    case initialized @ Initialized(_, _, _) => initialized.asJson
+    case initialized @ Initialized(_, _) => initialized.asJson
   }
 }

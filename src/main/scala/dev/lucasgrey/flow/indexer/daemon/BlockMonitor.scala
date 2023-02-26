@@ -10,7 +10,7 @@ import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.RegisterBlo
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.model.FlowId
-import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient}
+import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient, FlowHelper}
 import kamon.Kamon
 
 import scala.concurrent.duration.DurationInt
@@ -19,7 +19,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class BlockMonitor(
   val flowClient: FlowClient,
   val blockHeightRepository: BlockHeightRepository,
-  val entityRegistry: EntityRegistry
+  val entityRegistry: EntityRegistry,
+  val flowHelper: FlowHelper
 )(implicit val executionContext: ExecutionContext,
   val materializer: Materializer,
   val actorSystem: ActorSystem[_]
@@ -48,6 +49,7 @@ class BlockMonitor(
           }
         } yield res
     }
+      .throttle(1000, 1.second)
       .buffer(100, OverflowStrategy.backpressure)
       .mapAsync(100) { height =>
         val span = Kamon.spanBuilder("process-height").start()
@@ -59,8 +61,8 @@ class BlockMonitor(
           } else {
             for {
               block <- flowClient.getBlockByHeight(height)
-              collectionList <- extractCollections(block.collectionGuarantee.map(_.collectionId))
-              transactionList <- extractTransactions(collectionList.flatMap(_.transactionList).toList)
+              collectionList <- flowHelper.extractCollections(block.collectionGuarantee.map(_.collectionId))
+              transactionList <- flowHelper.extractTransactions(collectionList.flatMap(_.transactionList).toList)
               _ = entityRegistry.getBlockActorByHeight(height.toString) ! RegisterBlock(block, transactionList.toList)
             } yield Future.unit
           }
@@ -69,24 +71,6 @@ class BlockMonitor(
 
       }
       .runWith(Sink.ignore)
-  }
-
-  private def extractCollections(collectionIdList: List[FlowId]) = {
-    Source(collectionIdList)
-      .mapAsync(4) { collectionId => flowClient.getTransactionList(collectionId) }
-      .runWith(Sink.seq)
-  }
-
-  private def extractTransactions(transactionIds: List[FlowId]) = {
-    Source(transactionIds)
-      .mapAsync(4) { transactionId => {
-        for {
-          transaction <- flowClient.getTransactionById(transactionId)
-          transactionResult <- flowClient.getTransactionResultById(transactionId)
-          res = transaction.copy(transactionResult = Some(transactionResult))
-        } yield res
-      }}
-      .runWith(Sink.seq)
   }
 
   private def getLatestHeight: Future[Long] = {

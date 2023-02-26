@@ -9,20 +9,22 @@ import com.softwaremill.macwire.wire
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.BlockActor
 import dev.lucasgrey.flow.indexer.actors.block.BlockActor.EntityKey
-import dev.lucasgrey.flow.indexer.actors.block.command.handlers.RegisterBlockCmdHandler
+import dev.lucasgrey.flow.indexer.actors.block.command.handlers.{ForceSyncBlockCmdHandler, RegisterBlockCmdHandler}
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.daemon.BlockMonitor
 import dev.lucasgrey.flow.indexer.impl.{BlockController, InspectEntityController}
 import dev.lucasgrey.flow.indexer.processor.{BlockEventProcessor, TransactionBlockEventProcessor}
 import dev.lucasgrey.flow.indexer.processor.handler.{BlockEventReadSideHandler, TransactionEventReadSideHandler}
-import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient, PostgresProfileExtended}
+import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient, FlowHelper, PostgresProfileExtended}
 import dev.lucasgrey.flow.indexer.utils.FlowClientCreator.buildAPIFutureStubs
 import kamon.Kamon
 import org.onflow.protobuf.access.AccessAPIGrpc
 import slick.basic.DatabaseConfig
 import akka.http.scaladsl.server.Directives._
+import akka.kafka.ProducerSettings
 import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.dao.transaction.TransactionDataRepository
+import org.apache.kafka.common.serialization.StringSerializer
 
 import scala.io.StdIn
 
@@ -36,6 +38,9 @@ object FlowIndexerApplication extends App
   Kamon.init()
   AkkaManagement(system).start()
 
+  //Helpers
+  lazy val flowHelper = wire[FlowHelper]
+
   //Repository
   lazy val blockHeightRepository = wire[BlockHeightRepository]
   lazy val transactionRepository = wire[TransactionDataRepository]
@@ -45,7 +50,8 @@ object FlowIndexerApplication extends App
   transactionRepository.createTable()
 
   //Command Handler
-  lazy val registerBlockCmdHandler: RegisterBlockCmdHandler = wire[RegisterBlockCmdHandler]
+  lazy val registerBlockCmdHandler = wire[RegisterBlockCmdHandler]
+  lazy val forceSyncBlockCmdHandler = wire[ForceSyncBlockCmdHandler]
 
   //Flow Integration
   lazy val accessAPI: AccessAPIGrpc.AccessAPIFutureStub = buildAPIFutureStubs(
@@ -64,6 +70,12 @@ object FlowIndexerApplication extends App
     system.settings.config
   )
   lazy val database = dbConfig.db
+
+  //Kafka producer
+  lazy val kafkaConfig = system.settings.config.getConfig("akka.kafka.producer")
+  lazy val producerSettings =
+    ProducerSettings(kafkaConfig, new StringSerializer, new StringSerializer)
+      .withBootstrapServers(config.getString("akka.kafka.producer.bootstrap"))
 
   //Event Processor
   wire[BlockEventProcessor]

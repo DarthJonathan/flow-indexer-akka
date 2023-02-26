@@ -5,7 +5,7 @@ import akka.projection.eventsourced.EventEnvelope
 import akka.projection.slick.SlickHandler
 import akka.stream.Materializer
 import com.typesafe.scalalogging.StrictLogging
-import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, NewBlockRegistered}
+import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, ForceSyncBlockEvt, NewBlockRegistered}
 import dev.lucasgrey.flow.indexer.dao.transaction.{TransactionData, TransactionDataRepository}
 import slick.dbio.DBIO
 
@@ -40,6 +40,32 @@ class TransactionEventReadSideHandler(
               )
             )}
         ))
+          .map(_ => Done)
+
+      case ForceSyncBlockEvt(height, block, trxList) =>
+        logger.info(s"Transaction read side processor received height to be stored $height - force sync block")
+        DBIO.sequence(
+          trxList.map(trx => {
+            transactionDataRepository.upsert(
+              TransactionData(
+                transactionId = trx.transactionId,
+                blockId = block.id,
+                blockHeight = block.height,
+                script = trx.script,
+                arguments = trx.arguments,
+                referenceBlockId = trx.referenceBlockId,
+                payer = trx.payer,
+                gasLimit = trx.gasLimit,
+                proposalKey = trx.proposalKey,
+                authorizers = trx.authorizers,
+                payloadSignatures = trx.payloadSignatures,
+                envelopeSignatures = trx.envelopeSignatures,
+                transactionResult = trx.transactionResult,
+                timestamp = Instant.now()
+              )
+            )
+          }
+          ))
           .map(_ => Done)
 
       case _ =>

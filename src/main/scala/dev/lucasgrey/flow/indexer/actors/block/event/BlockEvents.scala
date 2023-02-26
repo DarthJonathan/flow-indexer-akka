@@ -9,6 +9,7 @@ object BlockEvents extends StrictLogging {
 
   sealed trait BlockEvent extends JsonSerializable
   case class NewBlockRegistered(height: Long, block: FlowBlock, transactionList: List[FlowTransaction]) extends BlockEvent
+  case class ForceSyncBlockEvt(height: Long, block: FlowBlock, transactionList: List[FlowTransaction]) extends BlockEvent
 
   type BlockEventHandler = (BlockState, BlockEvent) => BlockState
 
@@ -19,7 +20,12 @@ object BlockEvents extends StrictLogging {
         Initialized(
           flowBlock = Some(x.block),
           transactionList = x.transactionList,
-          isSealed = false
+        )
+      case x: ForceSyncBlockEvt =>
+        logger.info(s"Force synced new block height ${x.height}")
+        Initialized(
+          flowBlock = Some(x.block),
+          transactionList = x.transactionList,
         )
       case _ => ???
     }
