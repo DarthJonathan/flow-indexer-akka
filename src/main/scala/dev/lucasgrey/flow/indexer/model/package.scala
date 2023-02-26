@@ -15,7 +15,7 @@ package object model {
 
   object FlowBlockHeader {
     implicit val decoder: Decoder[FlowBlockHeader] = deriveDecoder
-    implicit val encoder: Encoder[FlowBlockHeader] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowBlockHeader] = deriveEncoder
   }
 
   case class FlowBlock(
@@ -30,7 +30,7 @@ package object model {
 
   object FlowBlock {
     implicit val decoder: Decoder[FlowBlock] = deriveDecoder
-    implicit val encoder: Encoder[FlowBlock] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowBlock] = deriveEncoder
   }
 
   case class FlowSeals(
@@ -42,7 +42,7 @@ package object model {
 
   object FlowSeals {
     implicit val decoder: Decoder[FlowSeals] = deriveDecoder
-    implicit val encoder: Encoder[FlowSeals] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowSeals] = deriveEncoder
   }
 
   case class FlowCollection(
@@ -52,7 +52,7 @@ package object model {
 
   object FlowCollection {
     implicit val decoder: Decoder[FlowCollection] = deriveDecoder
-    implicit val encoder: Encoder[FlowCollection] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowCollection] = deriveEncoder
   }
 
   case class FlowCollectionGuarantee(
@@ -62,7 +62,7 @@ package object model {
 
   object FlowCollectionGuarantee {
     implicit val decoder: Decoder[FlowCollectionGuarantee] = deriveDecoder
-    implicit val encoder: Encoder[FlowCollectionGuarantee] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowCollectionGuarantee] = deriveEncoder
   }
 
   case class FlowTransaction (
@@ -81,7 +81,7 @@ package object model {
 
   object FlowTransaction {
     implicit val decoder: Decoder[FlowTransaction] = deriveDecoder
-    implicit val encoder: Encoder[FlowTransaction] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowTransaction] = deriveEncoder
   }
 
   case class TransactionResult (
@@ -92,7 +92,7 @@ package object model {
 
   object TransactionResult {
     implicit val decoder: Decoder[TransactionResult] = deriveDecoder
-    implicit val encoder: Encoder[TransactionResult] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[TransactionResult] = deriveEncoder
   }
 
   case class FlowEvents (
@@ -105,7 +105,7 @@ package object model {
 
   object FlowEvents {
     implicit val decoder: Decoder[FlowEvents] = deriveDecoder
-    implicit val encoder: Encoder[FlowEvents] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowEvents] = deriveEncoder
   }
 
   case class ProposalKey(
@@ -116,7 +116,7 @@ package object model {
 
   object ProposalKey {
     implicit val decoder: Decoder[ProposalKey] = deriveDecoder
-    implicit val encoder: Encoder[ProposalKey] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[ProposalKey] = deriveEncoder
   }
 
   case class FlowSingleSignature(
@@ -127,7 +127,7 @@ package object model {
 
   object FlowSingleSignature {
     implicit val decoder: Decoder[FlowSingleSignature] = deriveDecoder
-    implicit val encoder: Encoder[FlowSingleSignature] = deriveEncoder
+    implicit val encoder: Encoder.AsObject[FlowSingleSignature] = deriveEncoder
   }
 
   type FlowId = String

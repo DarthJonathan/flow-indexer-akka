@@ -9,13 +9,12 @@ import dev.lucasgrey.flow.indexer.actors.block.state.{BlockState, Initialized}
 class RegisterBlockCmdHandler extends StrictLogging {
   def handleRegisterBlock(state: BlockState, cmd: RegisterBlock): Effect[BlockEvent, BlockState] = {
     if (state.isInstanceOf[Initialized]) {
-      logger.info(s"Block height ${cmd.blockHeader.height} already exist, skipping")
+      logger.info(s"Block height ${cmd.block.height} already exist, skipping")
       Effect.none
     } else {
-      logger.info(s"Block height ${cmd.blockHeader.height} newly registered")
+      logger.info(s"Block height ${cmd.block.height} newly registered")
       Effect.persist(NewBlockRegistered(
-        height = cmd.blockHeader.height,
-        blockHeader = cmd.blockHeader,
+        height = cmd.block.height,
         transactionList = cmd.transactionList,
         block = cmd.block
       ))

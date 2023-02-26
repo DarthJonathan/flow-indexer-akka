@@ -13,7 +13,7 @@ object BlockCommands {
   sealed trait BlockCommand extends InspectableEntity
 
   final case class BlockExistsCmd(replyTo: ActorRef[Boolean]) extends BlockCommand
-  final case class RegisterBlock(blockHeader: FlowBlockHeader, block: FlowBlock, transactionList: List[FlowTransaction]) extends BlockCommand
+  final case class RegisterBlock(block: FlowBlock, transactionList: List[FlowTransaction]) extends BlockCommand
 
   type BlockCommandHandler = (BlockState, InspectableEntity) => Effect[BlockEvent, BlockState]
 

@@ -5,9 +5,10 @@ import akka.http.scaladsl.model.StatusCodes.InternalServerError
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import dev.lucasgrey.flow.indexer.dao.transaction.TransactionDataRepository
+import dev.lucasgrey.flow.indexer.dao.transaction.{TransactionData, TransactionDataRepository}
 import dev.lucasgrey.flow.indexer.utils.EntityRegistry
-import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
+import io.circe.Encoder
+import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax._
 
 import scala.concurrent.ExecutionContext
@@ -20,6 +21,7 @@ class BlockController(
 )(implicit val actorSystem: ActorSystem[Nothing], val executionContext: ExecutionContext) {
 
   implicit val timeout: Timeout = 10.seconds
+  implicit val encoder: Encoder.AsObject[TransactionData] = deriveEncoder
 
   def getTransactionById(trxId: String): Route = {
     onComplete(

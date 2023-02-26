@@ -8,16 +8,15 @@ import dev.lucasgrey.flow.indexer.serializable.JsonSerializable
 object BlockEvents extends StrictLogging {
 
   sealed trait BlockEvent extends JsonSerializable
-  case class NewBlockRegistered(height: Long, blockHeader: FlowBlockHeader, block: FlowBlock, transactionList: List[FlowTransaction]) extends BlockEvent
+  case class NewBlockRegistered(height: Long, block: FlowBlock, transactionList: List[FlowTransaction]) extends BlockEvent
 
   type BlockEventHandler = (BlockState, BlockEvent) => BlockState
 
-  val blockEventHandler: BlockEventHandler = (state, event) => {
+  val blockEventHandler: BlockEventHandler = (_, event) => {
     event match {
       case x: NewBlockRegistered =>
         logger.info(s"Registered new block height ${x.height}")
         Initialized(
-          flowBlockHeader = x.blockHeader,
           flowBlock = Some(x.block),
           transactionList = x.transactionList,
           isSealed = false

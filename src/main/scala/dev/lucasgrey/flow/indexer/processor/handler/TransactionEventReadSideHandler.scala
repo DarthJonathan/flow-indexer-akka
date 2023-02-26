@@ -7,8 +7,6 @@ import akka.stream.Materializer
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, NewBlockRegistered}
 import dev.lucasgrey.flow.indexer.dao.transaction.{TransactionData, TransactionDataRepository}
-import io.circe.generic.encoding.DerivedAsObjectEncoder.deriveEncoder
-import io.circe.syntax._
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -19,11 +17,10 @@ class TransactionEventReadSideHandler(
 )(implicit val materializer: Materializer, val executionContext: ExecutionContext) extends SlickHandler[EventEnvelope[BlockEvent]] with StrictLogging {
   override def process(envelopes: EventEnvelope[BlockEvent]): DBIO[Done] = {
     envelopes.event match {
-      case NewBlockRegistered(height, _, block, trxList) =>
+      case NewBlockRegistered(height, block, trxList) =>
         logger.info(s"Transaction read side processor received height to be stored $height")
         DBIO.sequence(
           trxList.map(trx => {
-            logger.info(s"${trx.envelopeSignatures.asJson.spaces2}")
             transactionDataRepository.upsert(
               TransactionData(
                 transactionId = trx.transactionId,
