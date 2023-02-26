@@ -1,7 +1,7 @@
 package dev.lucasgrey.flow.indexer.impl
 
 import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse}
+import akka.http.scaladsl.model.StatusCodes.InternalServerError
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
@@ -12,6 +12,7 @@ import io.circe.syntax._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
 
 class BlockController(
   entityRegistry: EntityRegistry,
@@ -21,16 +22,14 @@ class BlockController(
   implicit val timeout: Timeout = 10.seconds
 
   def getTransactionById(trxId: String): Route = {
-    val res = transactionDataRepository.findTransactionById(trxId)
-      .map(trx => {
-        HttpResponse(
-          status = 200,
-          entity = HttpEntity(
-            ContentTypes.`application/json`,
-            trx.asJson.toString
-          ))
-      })
-
-    complete(res)
+    onComplete(
+      for {
+        maybeTransaction <- transactionDataRepository.findTransactionById(trxId)
+        trx = maybeTransaction.map(_.asJson.spaces2).getOrElse(null.toString)
+      } yield trx
+    ) {
+      case Failure(exception) => complete(InternalServerError, s"Exception in getting $trxId data, exception ${exception.getMessage}")
+      case Success(value) => complete(value)
+    }
   }
 }
