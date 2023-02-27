@@ -13,8 +13,8 @@ import dev.lucasgrey.flow.indexer.actors.block.command.handlers.{ForceSyncBlockC
 import dev.lucasgrey.flow.indexer.config.ConfigHolder
 import dev.lucasgrey.flow.indexer.daemon.BlockMonitor
 import dev.lucasgrey.flow.indexer.impl.{BlockController, InspectEntityController}
-import dev.lucasgrey.flow.indexer.processor.{BlockEventProcessor, TransactionBlockEventProcessor}
-import dev.lucasgrey.flow.indexer.processor.handler.{BlockEventReadSideHandler, TransactionEventReadSideHandler}
+import dev.lucasgrey.flow.indexer.processor.{BlockEventProcessor, BlockEventPublisherProcessor, TransactionBlockEventProcessor}
+import dev.lucasgrey.flow.indexer.processor.handler.{BlockEventPublisher, BlockEventReadSideHandler, TransactionEventReadSideHandler}
 import dev.lucasgrey.flow.indexer.utils.{EntityRegistry, FlowClient, FlowHelper, PostgresProfileExtended}
 import dev.lucasgrey.flow.indexer.utils.FlowClientCreator.buildAPIFutureStubs
 import kamon.Kamon
@@ -22,6 +22,7 @@ import org.onflow.protobuf.access.AccessAPIGrpc
 import slick.basic.DatabaseConfig
 import akka.http.scaladsl.server.Directives._
 import akka.kafka.ProducerSettings
+import akka.kafka.scaladsl.SendProducer
 import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.dao.transaction.TransactionDataRepository
 import org.apache.kafka.common.serialization.StringSerializer
@@ -76,14 +77,17 @@ object FlowIndexerApplication extends App
   lazy val producerSettings =
     ProducerSettings(kafkaConfig, new StringSerializer, new StringSerializer)
       .withBootstrapServers(config.getString("akka.kafka.producer.bootstrap"))
-
-  //Event Processor
-  wire[BlockEventProcessor]
-  wire[TransactionBlockEventProcessor]
+  lazy val sendProducer = SendProducer(producerSettings)
 
   //Projections
   lazy val blockEventReadSideHandler = wire[BlockEventReadSideHandler]
   lazy val transactionReadSideHandler = wire[TransactionEventReadSideHandler]
+  lazy val blockEventPublisher = wire[BlockEventPublisher]
+
+  //Event Processor
+  wire[BlockEventProcessor]
+  wire[TransactionBlockEventProcessor]
+  wire[BlockEventPublisherProcessor]
 
   //Registry
   lazy val sharding = ClusterSharding(system)

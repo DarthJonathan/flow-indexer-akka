@@ -3,7 +3,7 @@ package dev.lucasgrey.flow.indexer.actors.block.command.handlers
 import akka.persistence.typed.scaladsl.Effect
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.actors.block.command.BlockCommands.RegisterBlock
-import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, NewBlockRegistered}
+import dev.lucasgrey.flow.indexer.actors.block.event.BlockEvents.{BlockEvent, NewBlockRegisteredEvt}
 import dev.lucasgrey.flow.indexer.actors.block.state.{BlockState, Initialized}
 
 class RegisterBlockCmdHandler extends StrictLogging {
@@ -13,7 +13,7 @@ class RegisterBlockCmdHandler extends StrictLogging {
       Effect.none
     } else {
       logger.info(s"Block height ${cmd.block.height} newly registered")
-      Effect.persist(NewBlockRegistered(
+      Effect.persist(NewBlockRegisteredEvt(
         height = cmd.block.height,
         transactionList = cmd.transactionList,
         block = cmd.block
