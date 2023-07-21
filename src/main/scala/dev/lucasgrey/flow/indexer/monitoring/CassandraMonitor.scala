@@ -1,27 +1,35 @@
 package dev.lucasgrey.flow.indexer.monitoring
 
 import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
 import akka.stream.Materializer
 import akka.stream.alpakka.cassandra.CassandraSessionSettings
 import akka.stream.alpakka.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
+import com.softwaremill.macwire.wire
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.StrictLogging
+import dev.lucasgrey.flow.indexer.FlowIndexerApplication.system
 import kamon.metric._
 import kamon.module
-import kamon.module.{CombinedReporter, ModuleFactory}
+import kamon.module.{CombinedReporter, Module, ModuleFactory}
 import kamon.trace.Span
 
 import scala.concurrent.ExecutionContext
 
 class CassandraMonitor(
-  implicit val executionContext: ExecutionContext,
-  val materializer: Materializer,
-  val actorSystem: ActorSystem[_]
-) extends CombinedReporter with StrictLogging{
+//  implicit val executionContext: ExecutionContext,
+//  val materializer: Materializer,
+//  val actorSystem: ActorSystem[_]
+) extends Module with CombinedReporter with StrictLogging {
 
-  val sessionSettings = CassandraSessionSettings()
-  implicit val cassandraSession: CassandraSession =
-    CassandraSessionRegistry.get(actorSystem).sessionFor(sessionSettings)
+//  val system = ActorSystem(Behaviors.empty, "flow-indexer-metrics")
+//  implicit val executionContext = system.executionContext
+//
+//  val sessionSettings = CassandraSessionSettings()
+//  implicit val cassandraSession: CassandraSession =
+//    CassandraSessionRegistry.get(system).sessionFor(sessionSettings)
+
+  logger.info("Initialized cassandra monitor")
 
   override def reportPeriodSnapshot(snapshot: PeriodSnapshot): Unit = {
     snapshot match {
@@ -38,7 +46,7 @@ class CassandraMonitor(
 
 
   override def reportSpans(spans: scala.Seq[Span.Finished]): Unit = {
-    val metrics = cassandraSession.underlying().map(_.getMetrics)
+//    val metrics = cassandraSession.underlying().map(_.getMetrics)
     spans.foreach {
       case Span.Finished(id, trace, parentId, operationName, hasError, wasDelayed, from, to, kind,
       position, tags, metricTags, marks, links) =>
@@ -64,35 +72,13 @@ class CassandraMonitor(
 
   override def reconfigure(newConfig: Config): Unit =
     logger.warn("No config")
-
-
-  //  def inflight(host: String): RangeSampler =
-  //    Kamon.rangeSampler("cassandra.client-inflight").refine("target", host)
-  //
-  //  def inflightDriver(host: String): Histogram =
-  //    Kamon.histogram("cassandra.client-inflight-driver").refine("target", host)
-  //
-  //  def queryDuration: Histogram =
-  //    Kamon.histogram("cassandra.query-duration", MeasurementUnit.time.nanoseconds)
-  //
-  //  def queryCount: Counter =
-  //    Kamon.counter("cassandra.query-count")
-  //
-  //  def connections(host: String): Histogram =
-  //    Kamon.histogram("cassandra.connection-pool-size").refine("target", host)
-  //
-  //  def trashedConnections(host: String): Histogram =
-  //    Kamon.histogram("cassandra.trashed-connections").refine("target", host)
-  //
-  //  def recordQueryDuration(start: Long, end: Long): Unit = {
-  //    queryDuration.record(end - start)
-  //    queryCount.increment(1)
-  //    inflight("ALL").decrement()
-  //  }
 }
 
-object CassandraMonitor {
+object CassandraMonitor extends StrictLogging {
   class Factory extends ModuleFactory {
-    override def create(settings: ModuleFactory.Settings): module.Module = ???
+    override def create(settings: ModuleFactory.Settings): Module = {
+      logger.info("Cassandra monitor setup")
+      new CassandraMonitor()
+    }
   }
 }

@@ -64,7 +64,7 @@ object FlowIndexerApplication extends App
 
   //Start Polling
   lazy val blockMonitor = wire[BlockMonitor]
-  blockMonitor.StartPolling()
+//  blockMonitor.StartPolling()
 
   //Read side Connections
   lazy val dbConfig = DatabaseConfig.forConfig[PostgresProfileExtended] (
