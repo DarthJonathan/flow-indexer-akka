@@ -7,8 +7,7 @@ lazy val root = (project in file("."))
     name := "akka-flow-indexer"
   )
 
-resolvers +=
-  "jitpack.io" at "https://jitpack.io"
+resolvers += "jitpack.io" at "https://jitpack.io"
 
 val AkkaVersion = "2.7.0"
 val AkkaHttpVersion = "10.4.0"
@@ -42,6 +41,7 @@ libraryDependencies ++= Seq(
   "io.kamon" %% "kamon-zipkin" % "2.6.0",
   "io.kamon" %% "kamon-bundle" % "2.6.0",
   "io.kamon" %% "kamon-prometheus" % "2.6.0",
+  "io.kamon" %% "kamon-cassandra" % "2.6.0",
   "io.circe" %% "circe-core" % "0.14.4",
   "io.circe" %% "circe-generic" % "0.14.4",
   "io.circe" %% "circe-parser" % "0.14.4",

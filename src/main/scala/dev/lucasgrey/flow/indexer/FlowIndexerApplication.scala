@@ -25,6 +25,7 @@ import akka.kafka.ProducerSettings
 import akka.kafka.scaladsl.SendProducer
 import dev.lucasgrey.flow.indexer.dao.height.BlockHeightRepository
 import dev.lucasgrey.flow.indexer.dao.transaction.TransactionDataRepository
+import dev.lucasgrey.flow.indexer.monitoring.CassandraMonitor
 import org.apache.kafka.common.serialization.StringSerializer
 
 import scala.io.StdIn
@@ -99,6 +100,9 @@ object FlowIndexerApplication extends App
   })
 
   lazy val entityRegistry = new EntityRegistry(sharding)
+
+  //Monitor
+  wire[CassandraMonitor]
 
   //Controllers
   lazy val inspectEntityController: InspectEntityController = wire[InspectEntityController]
