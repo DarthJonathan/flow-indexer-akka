@@ -64,7 +64,7 @@ object FlowIndexerApplication extends App
 
   //Start Polling
   lazy val blockMonitor = wire[BlockMonitor]
-//  blockMonitor.StartPolling()
+  blockMonitor.StartPolling()
 
   //Read side Connections
   lazy val dbConfig = DatabaseConfig.forConfig[PostgresProfileExtended] (
@@ -102,7 +102,7 @@ object FlowIndexerApplication extends App
   lazy val entityRegistry = new EntityRegistry(sharding)
 
   //Monitor
-  wire[CassandraMonitor]
+//  wire[CassandraMonitor]
 
   //Controllers
   lazy val inspectEntityController: InspectEntityController = wire[InspectEntityController]

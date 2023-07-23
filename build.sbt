@@ -50,6 +50,7 @@ libraryDependencies ++= Seq(
   "com.softwaremill.macwire" %% "util" % "2.5.8",
   "com.softwaremill.macwire" %% "proxy" % "2.5.8",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+  "com.datastax.oss" % "java-driver-metrics-micrometer" % "4.15.0",
 
   //3rd Party Repo
   "org.onflow" % "flow" % "0.21",

@@ -3,33 +3,65 @@ package dev.lucasgrey.flow.indexer.monitoring
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.stream.Materializer
-import akka.stream.alpakka.cassandra.CassandraSessionSettings
+import akka.stream.alpakka.cassandra.{CassandraMetricsRegistry, CassandraSessionSettings}
 import akka.stream.alpakka.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
 import com.softwaremill.macwire.wire
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.StrictLogging
 import dev.lucasgrey.flow.indexer.FlowIndexerApplication.system
 import kamon.metric._
-import kamon.module
+import kamon.{Kamon, module}
 import kamon.module.{CombinedReporter, Module, ModuleFactory}
 import kamon.trace.Span
+import com.codahale.metrics.{Meter, MetricRegistry}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 
 class CassandraMonitor(
-//  implicit val executionContext: ExecutionContext,
-//  val materializer: Materializer,
-//  val actorSystem: ActorSystem[_]
+  implicit val executionContext: ExecutionContext,
+  val materializer: Materializer,
+  val actorSystem: ActorSystem[_]
 ) extends Module with CombinedReporter with StrictLogging {
 
-//  val system = ActorSystem(Behaviors.empty, "flow-indexer-metrics")
-//  implicit val executionContext = system.executionContext
-//
-//  val sessionSettings = CassandraSessionSettings()
-//  implicit val cassandraSession: CassandraSession =
-//    CassandraSessionRegistry.get(system).sessionFor(sessionSettings)
+  val sessionSettings = CassandraSessionSettings()
+  val sessionSettingsPersistance = CassandraSessionSettings(configPath = "akka.persistence.cassandra")
+  val cassandraSession: CassandraSession =
+    CassandraSessionRegistry.get(system).sessionFor(sessionSettingsPersistance)
+  val cassandraSessionPersistance: CassandraSession =
+    CassandraSessionRegistry.get(system).sessionFor(sessionSettingsPersistance)
 
   logger.info("Initialized cassandra monitor")
+
+  val bytesIn = Kamon.counter("cassandra.bytes-received")
+  val bytesOut = Kamon.counter("cassandra.bytes-sent")
+
+//  bytesIn.withTag("session", "akka.persistance.cassandra").autoUpdate()
+
+  actorSystem.scheduler.scheduleAtFixedRate(
+    initialDelay = 1.seconds,
+    interval = 1.seconds
+  )(
+    () => {
+      cassandraSessionPersistance.underlying().map(s => {
+        s.getMetrics.map(met => {
+          met.getRegistry.getMetrics.forEach((key, value) => {
+            value match {
+              case x: Meter => {
+                logger.info(s"Cassandra monitor tick session, ${key} -> ${x.getCount}")
+                if (key.contains("bytes-received")) {
+                  bytesIn.withTag("session", "akka.persistance.cassandra").increment()
+                } else if (key.contains("bytes-sent")) {
+
+                }
+              }
+              case _ => logger.info(s"Cassandra monitor tick session, ${key} -> ${value.toString}")
+            }
+          })
+        })
+      })
+    }
+  )
 
   override def reportPeriodSnapshot(snapshot: PeriodSnapshot): Unit = {
     snapshot match {
@@ -75,10 +107,10 @@ class CassandraMonitor(
 }
 
 object CassandraMonitor extends StrictLogging {
-  class Factory extends ModuleFactory {
-    override def create(settings: ModuleFactory.Settings): Module = {
-      logger.info("Cassandra monitor setup")
-      new CassandraMonitor()
-    }
-  }
+//  class Factory extends ModuleFactory {
+//    override def create(settings: ModuleFactory.Settings): Module = {
+//      logger.info("Cassandra monitor setup")
+//      new CassandraMonitor()
+//    }
+//  }
 }
